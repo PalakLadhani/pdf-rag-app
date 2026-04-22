@@ -1,6 +1,213 @@
-<mvc:View controllerName="pdfchat.controller.Main"
+<mvc:View
+    controllerName="pdfchat.controller.Main"
+    xmlns="sap.m"
     xmlns:mvc="sap.ui.core.mvc"
-    xmlns="sap.m">
-    <Page id="page" title="{i18n>title}">
+    xmlns:l="sap.ui.layout"
+    xmlns:u="sap.ui.unified"
+    xmlns:core="sap.ui.core"
+    displayBlock="true"
+    height="100%">
+
+    <Page id="mainPage"
+          showHeader="false"
+          enableScrolling="true"
+          backgroundDesign="Transparent"
+          class="appBackground">
+
+        <content>
+
+            <!-- =========== HERO HEADER =========== -->
+            <VBox class="heroHeader">
+                <HBox justifyContent="SpaceBetween"
+                      alignItems="Center"
+                      class="heroContent">
+
+                    <HBox alignItems="Center">
+                        <core:Icon src="sap-icon://document-text"
+                                   size="2.5rem"
+                                   color="#ffffff"
+                                   class="heroIcon"/>
+                        <VBox class="sapUiSmallMarginBegin">
+                            <Title text="PDF Q&amp;A Assistant"
+                                   level="H1"
+                                   class="heroTitle"/>
+                            <Text text="Upload a document and ask anything about it — powered by AI"
+                                  class="heroSubtitle"/>
+                        </VBox>
+                    </HBox>
+
+                    <Button icon="sap-icon://reset"
+                            text="Reset"
+                            press=".onResetPress"
+                            type="Transparent"
+                            class="heroResetBtn"
+                            tooltip="Clear everything and start over"/>
+                </HBox>
+            </VBox>
+
+            <!-- =========== CONTENT CARDS =========== -->
+            <VBox class="pageContent">
+
+                <!-- ===== CARD 1: UPLOAD ===== -->
+                <VBox class="appCard">
+
+                    <HBox alignItems="Center" class="cardHeader">
+                        <core:Icon src="sap-icon://upload-to-cloud"
+                                   size="1.5rem"
+                                   color="#0a6ed1"/>
+                        <VBox class="sapUiSmallMarginBegin">
+                            <Title text="Upload your PDF"
+                                   level="H3"
+                                   class="cardTitle"/>
+                            <Text text="Supported format: PDF  •  Max size: 20 MB"
+                                  class="cardSubtitle"/>
+                        </VBox>
+                    </HBox>
+
+                    <VBox class="cardBody">
+
+                        <HBox alignItems="Center" wrap="Wrap" class="uploadRow">
+
+                            <u:FileUploader
+                                id="fileUploader"
+                                name="pdfUpload"
+                                fileType="pdf"
+                                maximumFileSize="20"
+                                typeMissmatchMessage="Please select a PDF file."
+                                fileSizeExceedMessage="File is too large (max 20MB)."
+                                placeholder="Choose a PDF file..."
+                                change=".onFileSelected"
+                                width="420px"
+                                buttonText="Browse"
+                                class="prettyUploader"/>
+
+                            <Button
+                                id="uploadButton"
+                                text="Upload &amp; Process"
+                                type="Emphasized"
+                                icon="sap-icon://upload"
+                                press=".onUploadPress"
+                                enabled="{= ${/fileSelected} === true }"
+                                class="sapUiSmallMarginBegin primaryBtn"/>
+                        </HBox>
+
+                        <HBox class="statusRow" alignItems="Center">
+                            <core:Icon src="{= ${/documentId} !== null ? 'sap-icon://sys-enter-2' : 'sap-icon://information' }"
+                                       color="{= ${/documentId} !== null ? '#107e3e' : '#6a6d70' }"
+                                       size="1rem"/>
+                            <Text text="{/statusText}"
+                                  class="statusText sapUiTinyMarginBegin"/>
+                        </HBox>
+
+                    </VBox>
+                </VBox>
+
+                <!-- ===== CARD 2: CHAT ===== -->
+                <VBox class="appCard chatCard"
+                      visible="{= ${/documentId} !== null }">
+
+                    <HBox alignItems="Center" class="cardHeader">
+                        <core:Icon src="sap-icon://discussion"
+                                   size="1.5rem"
+                                   color="#0a6ed1"/>
+                        <VBox class="sapUiSmallMarginBegin">
+                            <Title text="Ask anything"
+                                   level="H3"
+                                   class="cardTitle"/>
+                            <Text text="Your questions are answered using the content of your PDF"
+                                  class="cardSubtitle"/>
+                        </VBox>
+                    </HBox>
+
+                    <!-- Chat messages area -->
+                    <ScrollContainer id="chatScroll"
+                                     height="420px"
+                                     vertical="true"
+                                     focusable="false"
+                                     class="chatScroll">
+                        <List id="chatList"
+                              items="{/chats}"
+                              showNoData="false"
+                              class="chatListStyled"
+                              backgroundDesign="Transparent">
+                            <CustomListItem type="Inactive" class="chatListItem">
+                                <FlexBox
+                                    justifyContent="{= ${sender} === 'You' ? 'End' : 'Start' }"
+                                    class="bubbleRow">
+                                    <VBox class="{= ${sender} === 'You' ? 'bubble bubbleUser' : 'bubble bubbleAssistant' }">
+                                        <HBox alignItems="Center" class="bubbleHeader">
+                                            <core:Icon
+                                                src="{= ${sender} === 'You' ? 'sap-icon://person-placeholder' : 'sap-icon://ai' }"
+                                                size="0.9rem"
+                                                color="{= ${sender} === 'You' ? '#ffffff' : '#0a6ed1' }"/>
+                                            <Text text="{sender}"
+                                                  class="bubbleSender sapUiTinyMarginBegin"/>
+                                        </HBox>
+                                        <Text text="{text}" class="bubbleText"/>
+                                        <Text text="{timestamp}" class="bubbleTime"/>
+                                    </VBox>
+                                </FlexBox>
+                            </CustomListItem>
+                        </List>
+
+                        <HBox visible="{/thinking}"
+                              alignItems="Center"
+                              class="thinkingRow">
+                            <VBox class="bubble bubbleAssistant bubbleThinking">
+                                <HBox alignItems="Center">
+                                    <BusyIndicator size="0.9rem"/>
+                                    <Text text="Assistant is thinking..."
+                                          class="sapUiTinyMarginBegin bubbleText"/>
+                                </HBox>
+                            </VBox>
+                        </HBox>
+                    </ScrollContainer>
+
+                    <!-- ========== INPUT ROW — properly aligned ========== -->
+                    <!-- ========== INPUT ROW — using Toolbar for reliable layout ========== -->
+<!--
+    Toolbar is the UI5-native way to build input rows with growing elements.
+    The key is layoutData with FlexItemData growFactor="1" on the Input:
+    this instructs the Toolbar's flex layout to give the Input all the
+    remaining horizontal space, while the Button keeps its natural size.
+-->
+<Toolbar class="inputToolbar" height="3.5rem">
+
+    <Input
+        id="questionInput"
+        placeholder="Ask a question about your PDF..."
+        submit=".onAskPress"
+        value="{/currentQuestion}"
+        enabled="{= !${/thinking} }"
+        class="questionInput">
+        <layoutData>
+            <ToolbarLayoutData shrinkable="true" maxWidth="100%" minWidth="120px"/>
+        </layoutData>
+    </Input>
+
+    <Button
+        text="Ask"
+        type="Emphasized"
+        icon="sap-icon://paper-plane"
+        press=".onAskPress"
+        enabled="{= !${/thinking} }"
+        class="askBtn"/>
+</Toolbar>
+
+                </VBox>
+
+                <!-- ===== EMPTY STATE ===== -->
+                <VBox visible="{= ${/documentId} === null }"
+                      alignItems="Center"
+                      class="emptyState">
+                    <core:Icon src="sap-icon://document"
+                               size="4rem"
+                               color="#cfd4d9"/>
+                    <Text text="Upload a PDF above to get started"
+                          class="emptyStateText"/>
+                </VBox>
+
+            </VBox>
+        </content>
     </Page>
 </mvc:View>

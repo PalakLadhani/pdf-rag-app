@@ -1,1 +1,345 @@
-/* Enter your custom styles here */
+/*
+ * style.css - Modern, polished styling for the PDF Q&A Assistant
+ * Applied on top of the Fiori Horizon theme.
+ */
+
+/* ---------- Page background ---------- */
+.appBackground {
+    background: linear-gradient(135deg, #eef2f7 0%, #f7f9fc 100%) !important;
+    min-height: 100vh;
+}
+
+/* ---------- Hero header ---------- */
+.heroHeader {
+    background: linear-gradient(135deg, #0a6ed1 0%, #0854a0 50%, #5899e2 100%);
+    padding: 32px 48px;
+    box-shadow: 0 4px 20px rgba(10, 110, 209, 0.25);
+    position: relative;
+    overflow: hidden;
+}
+
+.heroHeader::before {
+    content: '';
+    position: absolute;
+    top: -50px;
+    right: -50px;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    pointer-events: none;
+}
+.heroHeader::after {
+    content: '';
+    position: absolute;
+    bottom: -80px;
+    right: 120px;
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.06);
+    pointer-events: none;
+}
+
+.heroContent {
+    position: relative;
+    z-index: 1;
+}
+
+.heroIcon {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 12px;
+    border-radius: 12px;
+}
+
+.heroTitle .sapMTitle {
+    color: #ffffff !important;
+    font-size: 1.8rem !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.3px;
+}
+
+.heroSubtitle {
+    color: rgba(255, 255, 255, 0.85) !important;
+    font-size: 0.95rem !important;
+    margin-top: 4px;
+}
+
+.heroResetBtn .sapMBtnInner {
+    background: rgba(255, 255, 255, 0.15) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 8px !important;
+}
+.heroResetBtn .sapMBtnInner:hover {
+    background: rgba(255, 255, 255, 0.25) !important;
+}
+.heroResetBtn .sapMBtnContent,
+.heroResetBtn .sapUiIcon {
+    color: #ffffff !important;
+}
+
+/* ---------- Page content container ---------- */
+.pageContent {
+    max-width: 960px;
+    margin: -32px auto 32px auto;
+    padding: 0 24px;
+    position: relative;
+    z-index: 2;
+}
+
+/* ---------- Cards ---------- */
+.appCard {
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(15, 23, 42, 0.08);
+    padding: 24px 28px;
+    margin-bottom: 24px;
+    border: 1px solid rgba(15, 23, 42, 0.04);
+    transition: box-shadow 0.25s ease;
+    box-sizing: border-box;
+}
+.appCard:hover {
+    box-shadow: 0 6px 32px rgba(15, 23, 42, 0.12);
+}
+
+.cardHeader {
+    padding-bottom: 16px;
+    border-bottom: 1px solid #eef1f5;
+    margin-bottom: 20px;
+}
+
+.cardTitle .sapMTitle {
+    font-size: 1.15rem !important;
+    font-weight: 600 !important;
+    color: #1d2d3e;
+}
+
+.cardSubtitle {
+    color: #6a7891 !important;
+    font-size: 0.85rem !important;
+    margin-top: 2px;
+}
+
+.cardBody {
+    padding-top: 4px;
+}
+
+/* ---------- Upload row ---------- */
+.uploadRow {
+    padding: 8px 0 16px 0;
+}
+
+.prettyUploader .sapMInputBaseInner {
+    border-radius: 8px !important;
+    border: 1px solid #d5dae0 !important;
+    height: 2.5rem !important;
+}
+
+.primaryBtn .sapMBtnInner {
+    border-radius: 8px !important;
+    height: 2.5rem !important;
+    box-shadow: 0 2px 6px rgba(10, 110, 209, 0.3);
+}
+
+.statusRow {
+    padding: 10px 14px;
+    background: #f7f9fc;
+    border-radius: 8px;
+    margin-top: 4px;
+}
+.statusText {
+    color: #4a5b70 !important;
+    font-size: 0.9rem !important;
+}
+
+/* ---------- Chat area ---------- */
+.chatCard {
+    padding-bottom: 20px;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.chatCard > * {
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.chatScroll {
+    background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+    border-radius: 12px;
+    padding: 16px;
+    border: 1px solid #eef1f5;
+    margin-bottom: 16px;
+}
+
+.chatListStyled .sapMLIB {
+    border: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+}
+.chatListStyled .sapMLIB:hover {
+    background: transparent !important;
+}
+.chatListItem {
+    margin-bottom: 12px;
+}
+
+.bubbleRow {
+    width: 100%;
+}
+
+.bubble {
+    max-width: 78%;
+    padding: 12px 16px;
+    border-radius: 16px;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+    animation: bubbleIn 0.25s ease-out;
+}
+
+@keyframes bubbleIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* User bubble (right side, blue) */
+.bubbleUser {
+    background: linear-gradient(135deg, #0a6ed1 0%, #0854a0 100%);
+    color: #ffffff;
+    border-bottom-right-radius: 4px;
+}
+.bubbleUser .bubbleSender .sapMText,
+.bubbleUser .bubbleText .sapMText {
+    color: #ffffff !important;
+}
+.bubbleUser .bubbleTime .sapMText {
+    color: rgba(255, 255, 255, 0.75) !important;
+}
+
+/* Assistant bubble (left side, gray) */
+.bubbleAssistant {
+    background: #ffffff;
+    border: 1px solid #e5e9ef;
+    border-bottom-left-radius: 4px;
+}
+.bubbleAssistant .bubbleSender .sapMText {
+    color: #0a6ed1 !important;
+}
+.bubbleAssistant .bubbleText .sapMText {
+    color: #1d2d3e !important;
+}
+.bubbleAssistant .bubbleTime .sapMText {
+    color: #8b95a6 !important;
+}
+
+.bubbleHeader {
+    margin-bottom: 6px;
+}
+.bubbleSender .sapMText {
+    font-weight: 600 !important;
+    font-size: 0.8rem !important;
+    letter-spacing: 0.2px;
+}
+.bubbleText .sapMText {
+    font-size: 0.95rem !important;
+    line-height: 1.5 !important;
+    white-space: pre-wrap;
+}
+.bubbleTime .sapMText {
+    font-size: 0.7rem !important;
+    margin-top: 4px;
+}
+
+.bubbleThinking {
+    max-width: 260px;
+}
+
+.thinkingRow {
+    padding: 8px 0;
+}
+
+/* ==========================================================
+   INPUT TOOLBAR — UI5-native layout that reliably stretches
+   the Input and keeps the Ask button on the right
+   ========================================================== */
+.inputToolbar {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 12px 0 4px 0 !important;
+    min-height: 3.5rem !important;
+}
+
+/* Toolbar's internal flex container */
+.inputToolbar .sapMTBInner {
+    width: 100% !important;
+    gap: 12px !important;
+    padding: 0 !important;
+}
+
+/* Input stretches to fill */
+.inputToolbar .questionInput {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+}
+
+.inputToolbar .questionInput .sapMInputBaseContentWrapper {
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.inputToolbar .questionInput .sapMInputBaseInner {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    border-radius: 10px !important;
+    height: 2.75rem !important;
+    border: 1px solid #d5dae0 !important;
+    padding: 0 16px !important;
+    font-size: 0.95rem !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.inputToolbar .questionInput .sapMInputBaseInner:focus,
+.inputToolbar .questionInput .sapMInputBaseContentWrapper:focus-within {
+    border-color: #0a6ed1 !important;
+    box-shadow: 0 0 0 3px rgba(10, 110, 209, 0.15) !important;
+    outline: none !important;
+}
+
+/* Ask button — fixed, never shrinks */
+.inputToolbar .askBtn {
+    flex: 0 0 auto !important;
+}
+.inputToolbar .askBtn .sapMBtn {
+    margin: 0 !important;
+}
+.inputToolbar .askBtn .sapMBtnInner {
+    border-radius: 10px !important;
+    height: 2.75rem !important;
+    min-height: 2.75rem !important;
+    padding: 0 24px !important;
+    min-width: 100px !important;
+    box-shadow: 0 2px 8px rgba(10, 110, 209, 0.3);
+}
+
+/* ---------- Empty state ---------- */
+.emptyState {
+    padding: 60px 20px;
+    text-align: center;
+}
+
+.emptyStateText {
+    color: #8b95a6 !important;
+    font-size: 1rem !important;
+    margin-top: 16px;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 700px) {
+    .heroHeader { padding: 24px 20px; }
+    .heroTitle .sapMTitle { font-size: 1.4rem !important; }
+    .heroSubtitle { font-size: 0.85rem !important; }
+    .pageContent { padding: 0 12px; margin-top: -20px; }
+    .appCard { padding: 18px; }
+    .bubble { max-width: 88%; }
+    .inputToolbar .askBtn .sapMBtnInner { min-width: 80px !important; padding: 0 16px !important; }
+}

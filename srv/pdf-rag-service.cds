@@ -1,16 +1,41 @@
 /**
  * pdf-rag-service.cds
  * -------------------
- * CAP service definition for the PDF RAG application.
+ * CAP service for the PDF RAG app.
  *
- * For now this only declares a simple ping function so that
- * cds watch has something to serve and the HTTP server starts.
- * Later we will add real actions here:
- *   - uploadPdf(...)   -> forwards a PDF to the Python AI service
- *   - askQuestion(...) -> forwards a question to the Python AI service
+ * Structure:
+ *   1. namespace pdfrag   -> no dot, avoids path-resolution quirks
+ *   2. Two entities: Documents (uploaded PDFs), Chats (Q&A history)
+ *   3. Two actions: uploadPdf, askQuestion -- declared now,
+ *      implemented later when the UI is ready.
  */
-service PdfRagService {
 
-    // Trivial health-check endpoint.
-    function ping() returns String;
+namespace pdfrag;
+
+// -------- Data model --------
+entity Documents {
+    key ID         : UUID;
+        filename   : String(255);
+        aiDocId    : String(100);   // id returned by the Python AI service
+        uploadedAt : Timestamp;
+}
+
+entity Chats {
+    key ID         : UUID;
+        documentID : UUID;
+        question   : String(2000);
+        answer     : LargeString;
+        createdAt  : Timestamp;
+}
+
+// -------- Service layer --------
+service PdfRagService @(path: '/pdf-rag') {
+
+    // Expose the entities as OData endpoints
+    entity Documents as projection on pdfrag.Documents;
+    entity Chats     as projection on pdfrag.Chats;
+
+    // Custom actions (stubs for now)
+    action uploadPdf(fileData: LargeBinary, filename: String) returns Documents;
+    action askQuestion(documentID: String, question: String) returns Chats;
 }

@@ -1,0 +1,19 @@
+# Web server
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+python-multipart==0.0.20
+
+# Environment variables
+python-dotenv==1.0.1
+
+# LangChain ecosystem
+langchain==0.3.13
+langchain-community==0.3.13
+langchain-google-genai==2.0.7
+langgraph==0.2.60
+
+# Vector store (in-memory, no server needed)
+chromadb==0.5.23
+
+# PDF parsing
+pypdf==5.1.0

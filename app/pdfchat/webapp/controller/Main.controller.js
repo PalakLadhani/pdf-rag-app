@@ -9,54 +9,45 @@ sap.ui.define([
     /**
      * Main.controller.js
      * ==================
-     * Handles all user interactions for the Main view:
-     *   - file selected         -> enable the Upload button
-     *   - Upload pressed        -> send PDF to backend (MOCKED for now)
-     *   - Ask pressed / Enter   -> send question to backend (MOCKED for now)
-     *   - Reset pressed         -> clear everything
+     * Handles all user interactions for the Main view.
      *
-     * "MOCKED for now" = we don't have the backend yet, so we fake the
-     * responses with setTimeout. Once the CAP + Python backend is ready
-     * we'll replace those mock blocks with real fetch() calls.
+     * BACKEND CONNECTION:
+     *   All /ai/* requests are proxied by the UI5 dev server to the
+     *   Python FastAPI service at http://localhost:8000.
+     *
+     *   /ai/health  -> GET   -> health check
+     *   /ai/upload  -> POST  -> upload a PDF, returns { document_id, ... }
+     *   /ai/chat    -> POST  -> { document_id, question } -> { answer }
      */
     return Controller.extend("pdfchat.controller.Main", {
 
+        // ================================================================
+        // Lifecycle
+        // ================================================================
         /**
-         * onInit runs once when the view is first created.
-         * We set up a JSONModel that holds all the view state:
-         *   - fileSelected: has the user picked a file yet?
-         *   - statusText:   text under the uploader
-         *   - documentId:   id of the uploaded PDF (null = nothing uploaded)
-         *   - chats:        array of message bubbles
-         *   - thinking:     true while waiting for an AI reply
-         *   - currentQuestion: two-way bound to the Input field
+         * Runs once when the view is first created.
+         * Sets up a JSONModel that holds all view state.
          */
         onInit: function () {
             const oModel = new JSONModel({
-                fileSelected: false,
-                statusText: "No PDF uploaded yet.",
-                documentId: null,
-                filename: null,
-                chats: [],
-                thinking: false,
-                currentQuestion: ""
+                fileSelected: false,                         // user picked a file?
+                statusText: "No PDF uploaded yet.",          // label under uploader
+                documentId: null,                            // id returned by Python
+                filename: null,                              // PDF filename
+                chats: [],                                   // chat message list
+                thinking: false,                             // true while awaiting AI
+                currentQuestion: ""                          // bound to input field
             });
-            // setModel with no name = the "default" model, referenced as {/...}
             this.getView().setModel(oModel);
 
-            // We hold the actual File object in a normal JS property, not
-            // in the model, because JSONModel serializes everything to JSON
-            // and a File can't be serialized.
+            // We store the File object here (not in the model) because
+            // JSONModel serializes everything and File can't be serialized.
             this._selectedFile = null;
         },
 
         // ================================================================
         // FILE SELECTION
         // ================================================================
-        /**
-         * Called when the user picks a file in the FileUploader.
-         * We remember the File object and update the status text.
-         */
         onFileSelected: function (oEvent) {
             const aFiles = oEvent.getParameter("files");
             const oFile = aFiles && aFiles[0];
@@ -75,14 +66,13 @@ sap.ui.define([
         },
 
         // ================================================================
-        // UPLOAD (mocked)
+        // UPLOAD  (REAL backend call)
         // ================================================================
         /**
-         * Fake upload: pretends to send the PDF to a backend, waits 1.5 sec,
-         * then sets documentId so the chat panel unhides.
-         * Replace the setTimeout block with a real fetch() later.
+         * Sends the picked PDF to the Python service at POST /ai/upload.
+         * We use FormData because it's a multipart file upload.
          */
-        onUploadPress: function () {
+        onUploadPress: async function () {
             if (!this._selectedFile) {
                 MessageToast.show("Please choose a PDF first.");
                 return;
@@ -91,49 +81,70 @@ sap.ui.define([
             const oModel = this.getView().getModel();
             const sFilename = this._selectedFile.name;
 
-            oModel.setProperty("/statusText", "Processing your PDF, please wait...");
+            oModel.setProperty("/statusText", "⏳ Processing your PDF, please wait...");
 
-            // ---- MOCK BACKEND CALL --------------------------------------
-            // Replace this block with:
-            //   const response = await fetch("/pdf-rag/uploadPdf", {...});
-            // when the backend is ready.
-            setTimeout(() => {
-                // Fake successful response
-                const sFakeDocId = "mock-" + Date.now();
-                oModel.setProperty("/documentId", sFakeDocId);
-                oModel.setProperty("/filename", sFilename);
+            try {
+                // Build multipart form data. The field name "file" must
+                // match the parameter name in FastAPI's @app.post("/upload").
+                const formData = new FormData();
+                formData.append("file", this._selectedFile);
+
+                const response = await fetch("/ai/upload", {
+                    method: "POST",
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    // Try to read server's error detail, fall back to status
+                    let errMsg = `HTTP ${response.status}`;
+                    try {
+                        const errJson = await response.json();
+                        if (errJson.detail) { errMsg = errJson.detail; }
+                    } catch (_) { /* ignore parse error */ }
+                    throw new Error(errMsg);
+                }
+
+                const data = await response.json();
+                // data = { document_id, filename, chunks, message }
+
+                oModel.setProperty("/documentId", data.document_id);
+                oModel.setProperty("/filename",   data.filename);
                 oModel.setProperty(
                     "/statusText",
-                    "✓ Ready: " + sFilename + " (mock mode)"
+                    `✓ Ready: ${data.filename}  (${data.chunks} chunks indexed)`
                 );
                 oModel.setProperty("/chats", []);
-                MessageToast.show("PDF processed (mock). Ask a question!");
-            }, 1500);
-            // --------------------------------------------------------------
+                MessageToast.show("PDF processed. Ask a question!");
+            } catch (err) {
+                console.error("Upload failed:", err);
+                oModel.setProperty("/statusText", "❌ Upload failed: " + err.message);
+                MessageBox.error("Could not upload the PDF.\n\n" + err.message, {
+                    title: "Upload Error"
+                });
+            }
         },
 
         // ================================================================
-        // ASK QUESTION (mocked)
+        // ASK QUESTION  (REAL backend call)
         // ================================================================
         /**
-         * Send the typed question. Immediately adds the user's bubble,
-         * shows a "thinking" spinner, fakes a 1.2-sec delay, then adds
-         * an assistant bubble with a canned reply.
+         * Sends the question + document_id to POST /ai/chat.
+         * Adds the user's message to the chat immediately, shows a
+         * "thinking" spinner, then appends the assistant's reply
+         * when it arrives.
          */
-        onAskPress: function () {
+        onAskPress: async function () {
             const oModel = this.getView().getModel();
             const sQuestion = (oModel.getProperty("/currentQuestion") || "").trim();
 
-            if (!sQuestion) {
-                return;  // ignore empty
-            }
+            if (!sQuestion) { return; }
             if (!oModel.getProperty("/documentId")) {
                 MessageToast.show("Please upload a PDF first.");
                 return;
             }
 
-            // Append user bubble
-            const aChats = oModel.getProperty("/chats").slice(); // clone
+            // 1. Immediately add the user's bubble
+            const aChats = oModel.getProperty("/chats").slice();
             aChats.push({
                 sender: "You",
                 text: sQuestion,
@@ -141,42 +152,68 @@ sap.ui.define([
             });
             oModel.setProperty("/chats", aChats);
 
-            // Clear the input and show thinking
+            // 2. Clear input and show the thinking indicator
             oModel.setProperty("/currentQuestion", "");
             oModel.setProperty("/thinking", true);
 
-            // ---- MOCK AI CALL -------------------------------------------
-            setTimeout(() => {
+            // 3. Call the backend
+            try {
+                const response = await fetch("/ai/chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        document_id: oModel.getProperty("/documentId"),
+                        question:    sQuestion
+                    })
+                });
+
+                if (!response.ok) {
+                    let errMsg = `HTTP ${response.status}`;
+                    try {
+                        const errJson = await response.json();
+                        if (errJson.detail) { errMsg = errJson.detail; }
+                    } catch (_) { /* ignore */ }
+                    throw new Error(errMsg);
+                }
+
+                const data = await response.json();   // { answer: "..." }
+
+                // 4. Append the assistant's reply
                 const aChats2 = oModel.getProperty("/chats").slice();
                 aChats2.push({
                     sender: "Assistant",
-                    text:
-                        "(Mock reply) I received your question: \"" +
-                        sQuestion +
-                        "\". Once the backend is connected, I'll answer " +
-                        "using the content of your PDF.",
+                    text: data.answer,
                     timestamp: new Date().toLocaleTimeString()
                 });
                 oModel.setProperty("/chats", aChats2);
+            } catch (err) {
+                console.error("Chat failed:", err);
+                const aChats2 = oModel.getProperty("/chats").slice();
+                aChats2.push({
+                    sender: "Assistant",
+                    text: "⚠️ Error: " + err.message,
+                    timestamp: new Date().toLocaleTimeString()
+                });
+                oModel.setProperty("/chats", aChats2);
+            } finally {
                 oModel.setProperty("/thinking", false);
-            }, 1200);
-            // --------------------------------------------------------------
+            }
         },
 
         // ================================================================
         // RESET
         // ================================================================
         /**
-         * Clear the uploaded document and chat history.
+         * Clears the uploaded document and chat history (client-side only).
+         * The RAGAgent in the Python server stays loaded — that's fine
+         * because we just ignore it on the UI side.
          */
         onResetPress: function () {
             MessageBox.confirm(
                 "Clear the current PDF and all messages?",
                 {
                     onClose: (sAction) => {
-                        if (sAction !== MessageBox.Action.OK) {
-                            return;
-                        }
+                        if (sAction !== MessageBox.Action.OK) { return; }
                         const oModel = this.getView().getModel();
                         oModel.setData({
                             fileSelected: false,

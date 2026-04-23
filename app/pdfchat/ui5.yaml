@@ -9,20 +9,34 @@ server:
     - name: fiori-tools-proxy
       afterMiddleware: compression
       configuration:
-        ignoreCertErrors: false # If set to true, certificate errors will be ignored. E.g. self-signed certificates will be accepted
+        ignoreCertErrors: false
         ui5:
           path:
             - /resources
             - /test-resources
           url: https://ui5.sap.com
+
     - name: fiori-tools-appreload
       afterMiddleware: compression
       configuration:
         port: 35729
         path: webapp
         delay: 300
+
     - name: fiori-tools-preview
       afterMiddleware: fiori-tools-appreload
       configuration:
         flp:
           theme: sap_horizon
+
+    # =======================================================
+    # PROXY TO PYTHON AI SERVICE
+    # Any request to /ai/* from the browser is forwarded to
+    # http://localhost:8000/* (our FastAPI server).
+    # Example: fetch('/ai/health') -> GET http://localhost:8000/health
+    # =======================================================
+    - name: ui5-middleware-simpleproxy
+      afterMiddleware: fiori-tools-preview
+      mountPath: /ai
+      configuration:
+        baseUri: "http://localhost:8000"

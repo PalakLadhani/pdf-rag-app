@@ -8,12 +8,12 @@
     "sapui5"
   ],
   "main": "webapp/index.html",
-  "dependencies": {},
   "devDependencies": {
-    "@ui5/cli": "^4.0.33",
-    "@sap/ux-ui5-tooling": "1",
     "@sap-ux/eslint-plugin-fiori-tools": "^9.0.0",
-    "eslint": "^9"
+    "@sap/ux-ui5-tooling": "1",
+    "@ui5/cli": "^4.0.33",
+    "eslint": "^9",
+    "ui5-middleware-simpleproxy": "^3.7.0"
   },
   "scripts": {
     "start": "fiori run --open \"test/flp.html#app-preview\"",
@@ -27,5 +27,10 @@
     "start-variants-management": "fiori run --open \"/preview.html#app-preview\"",
     "unit-test": "fiori run --open \"test/unit/unitTests.qunit.html\""
   },
-  "sapuxLayer": "CUSTOMER_BASE"
+  "sapuxLayer": "CUSTOMER_BASE",
+  "ui5": {
+    "dependencies": [
+      "ui5-middleware-simpleproxy"
+    ]
+  }
 }
